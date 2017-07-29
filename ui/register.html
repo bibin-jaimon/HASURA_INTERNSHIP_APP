@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>My Internship App</title>
+	<meta charset="utf-8">
+	<meta content="width=device-width, initial-scale=1" name="viewport">
+	<!-- Latest compiled and minified CSS -->
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<script src="https://github.com/hasura/js-sdk/releases/download/v0.1.1/hasura.min.js"></script>
+	<!--<link href="/ui/style.css" rel="stylesheet" type="text/css">-->
+</head>
+<body style="background: url('/assets/bg.png');">
+	<nav class="navbar navbar-inverse">
+		<div class="container-fluid">
+			<!-- Brand and toggle get grouped for better mobile display -->
+			<div class="navbar-header">
+				<button aria-expanded="false" class="navbar-toggle collapsed" data-target=
+				"#bs-example-navbar-collapse-1" data-toggle="collapse" type=
+				"button"><span class="sr-only">Toggle navigation</span> <span class=
+				"icon-bar"></span> <span class="icon-bar"></span> <span class=
+				"icon-bar"></span></button> <a class="navbar-brand" href="#">Masters Mind</a>
+			</div><!-- Collect the nav links, forms, and other content for toggling -->
+			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			</div><!-- /.navbar-collapse -->
+		</div><!-- /.container-fluid -->
+	</nav>
+	<div class="container" style="margin-top: 5%">
+		<div class="col-md-12">
+			<div class="col-md-8">
+			</div>
+			<div class="col-md-4">			
+				<div class="modal-dialog modal-sm" style="margin-bottom:0">
+					<div class="modal-content">
+						<div class="panel-heading">
+							<h3 class="panel-title">Register</h3>
+						</div>
+						<div class="panel-body">
+							<form role="form">
+								<fieldset>
+									<div class="form-group">
+										<input class="form-control" name="fullname" id="fullname" placeholder="Enter Full Name" type="text" required="">
+									</div>
+									<div class="form-group">
+										<input class="form-control" name="email" id="email" placeholder="Enter Email" type="email" required="">
+									</div>
+									<div class="form-group">
+										<input class="form-control" name="username" id="userName" placeholder="Enter Username" type="text" required="">
+									</div>
+									<div class="form-group">
+										<input class="form-control" name="password" id="passWord" placeholder="Enter Password"
+										type="password" required="">
+									</div>
+									<div class="form-group">
+										<input class="form-control" name="collegename" id="collegename" placeholder="Enter Collge Name"
+										type="text" required="">
+									</div>
+									<div class="form-group">
+										<a class="btn  btn-block btn-success" id="signup_button">Sign Up</a>
+										<div id="flash"></div>
+										<hr />
+										<a class="btn btn-info btn-block pull-right" href="/login">Back to Login</a>
+									</div>
+								</fieldset>
+							</form>
+						</div>
+					</div>
+				</div>								
+			</div>
+		</div>
+	</div>
+<script>
+	hasura .setBaseDomain ('c100.hasura.me ');
+	hasura .disableHttps (); // No HTTPS enabled on local-development
+	
+
+$(document).ready(function(){
+
+	var dataUrl = 'http://data.c100.hasura.me/v1/query';
+    var authUrl = 'http://auth.c100.hasura.me/';
+    //var fileUrl = 'https://filestore.straggle14.hasura-app.io/v1/file';
+	$('#signup_button').click(function() {
+            var uname = $('#userName').val();
+            var pass = $('#passWord').val();
+            console.log(uname+" and "+pass);
+            $.ajax({
+                url: authUrl + 'signup',
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                data: JSON.stringify({
+                    "username": $('#userName').val(),
+                    "password": $('#passWord').val(),
+                    "email": $("#email").val()
+                })
+            }).done(function(data) {
+            	console.log('insering into profile');
+                //user Register
+                $.ajax({
+	                url: dataUrl,
+	                method: 'post',
+	                headers: {
+		                'Authorization': 'Bearer ' + data.auth_token,
+		                'Content-Type': 'application/json'
+		            },
+	                data: JSON.stringify({
+	                	"type": "insert",
+		                "args": {
+		                    "table": "profile",
+		                    "objects": [{"user_id": data.hasura_id,
+		                    			 "fullname": $('#fullname').val(),
+		                    			 "collegename": $('#collegename').val()}]
+		                }
+	                })
+	            }).done(function(reg_status){
+	            	console.log('insert profile succes');
+	            	$('#flash').hide().html('<br><li><span class="text-success">Registration Success..Please Login</span></li>').fadeIn("slow");
+	            	 window.location ='/login';
+	            }).fail(function(reg_status){
+	            	console.log('insert profile failed');
+	            	$('#flash').hide().html('<br><li><span class="text-danger"> Something Went Wrong! </span></li>').fadeIn("slow");
+	            })
+
+                //query for enter in profile table;			
+            }).fail(function(data) {
+            	console.log('signup failed');
+            	var k = JSON.parse(data.responseText).message;
+                $('#flash').hide().html('<br><li><span class="text-danger"> '+ k +' </span></li>').fadeIn("slow");
+                //console.log(data.responseJSON.message);
+            });
+        });
+});
+</script>
+
+</body>
+</html>
