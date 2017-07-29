@@ -1,2 +1,2 @@
 # INTERNSHIP_APP
-not completed
+completed
